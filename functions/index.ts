@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import express from 'express'
 import cors from "cors"
+import serverless from 'serverless-http';
 
 const prisma = new PrismaClient()
 const app = express()
@@ -8,11 +9,15 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-app.get('/', (req, res) => {
+const router = express.Router();
+
+
+
+router.get('/', (req, res) => {
   res.json({ "data": "success" })
 })
 
-app.post('/create', async (req, res) => {
+router.post('/create', async (req, res) => {
   const { title, content } = req.body;
 
   try {
@@ -29,7 +34,7 @@ app.post('/create', async (req, res) => {
   }
 })
 
-app.get('/getall', async (req, res) => {
+router.get('/getall', async (req, res) => {
   try {
     const posts = await prisma.post.findMany();
 
@@ -39,7 +44,7 @@ app.get('/getall', async (req, res) => {
   }
 })
 
-app.get('/find/:id', async (req, res) => {
+router.get('/find/:id', async (req, res) => {
   try {
     const post = await prisma.post.findUnique({
       where: {
@@ -57,6 +62,8 @@ app.get('/find/:id', async (req, res) => {
   }
 })
 
-app.listen(3000, () => {
-  console.log("App running on port 3000")
-})
+// app.listen(3000, () => {
+//   console.log("App running on port 3000")
+// })
+app.use('/.netlify/functions/index', router)
+module.exports.handler = serverless(app);
